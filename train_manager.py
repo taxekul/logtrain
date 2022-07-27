@@ -28,17 +28,8 @@ class TrainManager:
                 'speed',
                 'direction',
             )
-        self.df = pd.DataFrame(columns=self.columns)
-        self.df = self.df.astype(dtype={'train_id':'string',
-                                        'route_id':'string',
-                                        'active':bool,
-                                        'timestamp': 'datetime64[ns]',
-                                        'latitude':float,
-                                        'longitude':float,
-                                        #                'position',
-                                        'speed':float,
-                                        'direction': float })
-        print(self.df.info())
+        self.init_df()
+
         credentials = compute_engine.Credentials()
         pandas_gbq.context.credentials = credentials
 
@@ -46,8 +37,21 @@ class TrainManager:
 
         self.client = None#bigquery.Client()
 
-    def add_to_df(self,reading):
 
+    def init_df(self):
+        self.df = pd.DataFrame(columns=self.columns)
+        self.df = self.df.astype(dtype={'train_id': 'string',
+                                'route_id': 'string',
+                                'active': bool,
+                                'timestamp': 'datetime64[ns]',
+                                'latitude': float,
+                                'longitude': float,
+                                #                'position',
+                                'speed': float,
+                                'direction': float})
+    
+
+    def add_to_df(self,reading):
         reading = reading.split(',')
         train_id = reading[14].split('.')[0]
 
@@ -84,6 +88,7 @@ class TrainManager:
 
     def insert_df(self):
         pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_table',project_id='spry-starlight-329007', if_exists='append')
+        self.init_df()
 #        df = pd.DataFrame(columns=self.columns)
 
 

@@ -12,14 +12,13 @@ def on_message(ws, message):
     global ids
 
     if train_manager.add_to_df(message):
-        if train_manager.df.shape[0] > 10:
-            print(train_manager.df.head())
-            print(train_manager.df.info())
+        if train_manager.df.shape[0] > 100:
             print(train_manager.df['train_id'])
-#            train_manager.insert_df()
+            train_manager.insert_df()
+
             # i+=1
             # if i==2:
-            exit()
+#            exit()
 #            train_manager.insert_and_reset()
 #            time.sleep(5)
 
@@ -40,3 +39,6 @@ except Exception as e:
     print('Exception:',e.format())
 
 print('Avslutar!' , result)
+print(train_manager.df.head())
+print(train_manager.df.info())
+print(train_manager.df.shape[0])
