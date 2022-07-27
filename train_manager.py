@@ -25,7 +25,7 @@ class TrainManager:
 
         self.records = []
 
-        self.client = bigquery.Client()
+        self.client = None#bigquery.Client()
 
 
     def add(self, reading):
@@ -93,14 +93,14 @@ class TrainManager:
 
         job_config = bigquery.QueryJobConfig(
             query_parameters=[
-                bigquery.ScalarQueryParameter("train_id", "STRING", record.train_id),
-                bigquery.ScalarQueryParameter("route_id", "STRING", record.route_id),
-                bigquery.ScalarQueryParameter("active", "BOOLEAN", record.active),
-                bigquery.ScalarQueryParameter("timestamp", "DATETIME", record.timestamp),
-                bigquery.ScalarQueryParameter("latitude", "FLOAT64", record.latitude),
-                bigquery.ScalarQueryParameter("longitude", "FLOAT64", record.longitude),
-                bigquery.ScalarQueryParameter("speed", "FLOAT64", record.speed),
-                bigquery.ScalarQueryParameter("direction", "FLOAT64", record.direction),
+                bigquery.ScalarQueryParameter("train_id", "STRING", record['train_id']),
+                bigquery.ScalarQueryParameter("route_id", "STRING", 0 if record['route_id']=='' else record['route_id']),
+                bigquery.ScalarQueryParameter("active", "BOOLEAN", record['active']),
+                bigquery.ScalarQueryParameter("timestamp", "DATETIME", record['timestamp']),
+                bigquery.ScalarQueryParameter("latitude", "FLOAT64", record['latitude']),
+                bigquery.ScalarQueryParameter("longitude", "FLOAT64", record['longitude']),
+                bigquery.ScalarQueryParameter("speed", "FLOAT64", record['speed']),
+                bigquery.ScalarQueryParameter("direction", "FLOAT64", record['direction']),
             ]
         )
 
