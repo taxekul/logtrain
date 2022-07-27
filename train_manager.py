@@ -29,8 +29,18 @@ class TrainManager:
                 'direction',
             )
         self.df = pd.DataFrame(columns=self.columns)
-        credentials = compute_engine.Credentials()
-        pandas_gbq.context.credentials = credentials
+        self.df = self.df.astype(dtype={'train_id':'string',
+                                        'route_id':'string',
+                                        'active':bool,
+                                        'timestamp': 'datetime64[ns]',
+                                        'latitude':float,
+                                        'longitude':float,
+                                        #                'position',
+                                        'speed':float,
+                                        'direction': float })
+        print(self.df.info())
+        #credentials = compute_engine.Credentials()
+        #pandas_gbq.context.credentials = credentials
 
         self.records = []
 
@@ -54,8 +64,9 @@ class TrainManager:
 
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
-            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
+            timestamp=pd.Timestamp(timestamp)
+#            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
+#            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
 
             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
             longitude = int(reading[5][0:3]) + float(reading[5][3:]) / 60
