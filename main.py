@@ -12,8 +12,11 @@ def on_message(ws, message):
     global ids
 
     if train_manager.add_to_df(message):
-        if train_manager.df.shape[0] > 100:
-            train_manager.insert_df()
+        if train_manager.df.shape[0] > 10:
+            print(train_manager.df.head())
+            print(train_manager.df.info())
+            print(train_manager.df['train_id'])
+#            train_manager.insert_df()
             # i+=1
             # if i==2:
             exit()
