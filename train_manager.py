@@ -7,7 +7,7 @@ from google.auth import compute_engine
 import pandas as pd
 import pandas_gbq
 from datetime import datetime
-from dateutil import tz
+#from dateutil import tz
 from google.cloud import bigquery
 
 
@@ -109,8 +109,8 @@ class TrainManager:
 
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
-            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
+#            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
+#            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
 
             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
             longitude = int(reading[5][0:3]) + float(reading[5][3:]) / 60
