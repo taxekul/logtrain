@@ -1,0 +1,6 @@
+pandas
+websocket-client
+google-auth
+pandas_gbq
+google-cloud-bigquery
+dateutil
