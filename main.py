@@ -14,7 +14,7 @@ def on_message(ws, message):
     if train_manager.add(message):
         if len(train_manager.records) > 20:
             train_manager.insert_and_reset()
-            time.sleep(5)
+#            time.sleep(5)
 
 
 

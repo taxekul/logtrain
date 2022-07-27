@@ -35,7 +35,7 @@ class TrainManager:
         # Avbryt om fel tåg eller ingen position
         if train_id not in self.train_ids:
             return False
-        elif reading[3] == '' or reading[5] == '':
+        elif reading[3] == '' or reading[5] == '' or reading[16]=='':
             return False
 
         else:
@@ -95,7 +95,7 @@ class TrainManager:
             query_parameters=[
                 bigquery.ScalarQueryParameter("train_id", "STRING", record['train_id']),
                 bigquery.ScalarQueryParameter("route_id", "STRING", 0 if record['route_id']=='' else record['route_id']),
-                bigquery.ScalarQueryParameter("active", "BOOLEAN", record['active']),
+                bigquery.ScalarQueryParameter("active", "BOOL", record['active']),
                 bigquery.ScalarQueryParameter("timestamp", "DATETIME", record['timestamp']),
                 bigquery.ScalarQueryParameter("latitude", "FLOAT64", record['latitude']),
                 bigquery.ScalarQueryParameter("longitude", "FLOAT64", record['longitude']),
