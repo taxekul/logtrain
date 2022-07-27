@@ -1,4 +1,4 @@
-#from gevent import sleep
+#from gevent import sleepimport warnings
 import websocket
 import time
 from train_manager import TrainManager
@@ -11,9 +11,13 @@ def on_message(ws, message):
     global i
     global ids
 
-    if train_manager.add(message):
-        if len(train_manager.records) > 20:
-            train_manager.insert_and_reset()
+    if train_manager.add_to_df(message):
+        if train_manager.df.shape[0] > 100:
+            train_manager.insert_df()
+            # i+=1
+            # if i==2:
+            exit()
+#            train_manager.insert_and_reset()
 #            time.sleep(5)
 
 
