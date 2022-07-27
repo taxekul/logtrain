@@ -25,7 +25,7 @@ class TrainManager:
 
         self.records = []
 
-        self.client = None#bigquery.Client()
+        self.client = bigquery.Client()
 
 
     def add(self, reading):
@@ -103,6 +103,7 @@ class TrainManager:
                 bigquery.ScalarQueryParameter("direction", "FLOAT64", record['direction']),
             ]
         )
+        return query, job_config
 
 
 #        for record in self.records:
