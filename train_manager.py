@@ -7,16 +7,18 @@ from google.auth import compute_engine
 import pandas as pd
 import pandas_gbq
 from datetime import datetime
+from datetime import timedelta
 #from dateutil import tz
 from google.cloud import bigquery
 
 
 class TrainManager:
-    def __init__(self) -> None:
+    def __init__(self, interval_seconds=0) -> None:
         # Läs in VT-tågnummer
         with open('train_ids.txt', 'r') as train_file:
             self.train_ids = [train_id.strip() for train_id in train_file.readlines()]
         
+        self.interval_seconds = interval_seconds
         self.columns=(
                 'train_id',
                 'route_id',
@@ -35,8 +37,9 @@ class TrainManager:
 
         self.records = []
 
-        self.client = None#bigquery.Client()
 
+        # Används om direkta sql-kommandon
+        self.client = None#bigquery.Client()
 
     def init_df(self):
         self.df = pd.DataFrame(columns=self.columns)
@@ -46,7 +49,6 @@ class TrainManager:
                                 'timestamp': 'datetime64[ns]',
                                 'latitude': float,
                                 'longitude': float,
-                                #                'position',
                                 'speed': float,
                                 'direction': float})
     
@@ -72,6 +74,11 @@ class TrainManager:
 #            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
 #            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
 
+            # Avbryt om för tidigt
+            latest_entry = self.df[self.df.train_id == train_id].timestamp.max()
+            if timestamp > latest_entry + timedelta(self.interval_seconds):
+                return False
+
             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
             longitude = int(reading[5][0:3]) + float(reading[5][3:]) / 60
             position = (latitude, longitude)
@@ -86,12 +93,14 @@ class TrainManager:
 
             return True
 
-    def insert_df(self):
+
+    # Och nollställ
+    def insert_df_into_bigquery(self):
         pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_table',project_id='spry-starlight-329007', if_exists='append')
         self.init_df()
-#        df = pd.DataFrame(columns=self.columns)
 
 
+    # Lägg till i records, inte i df
     def add(self, reading):
         reading = reading.split(',')
         train_id = reading[14].split('.')[0]
@@ -126,10 +135,12 @@ class TrainManager:
             
             return True
 
+
+    # Med vanligt sql
     def insert_and_reset(self):
         # 1 generate sql
         for record in self.records:
-            query, job_config = self.generate_query2(record)
+            query, job_config = self.generate_query(record)
             # Make an API request.
             query_job = self.client.query(query, job_config=job_config)
 
@@ -137,7 +148,9 @@ class TrainManager:
         # 3 reset
         self.records = []
 
-    def generate_query(self):
+
+    # Vanlig sql
+    def generate_query_TABORT(self):
         table = 'logtrain_data.logtrain_data_table'
         fields = ','.join(self.columns)
         values =''
@@ -150,7 +163,8 @@ class TrainManager:
         return query
 
 
-    def generate_query2(self, record):
+    # Vanlig sql
+    def generate_query(self, record):
         table = 'logtrain_data.logtrain_data_table'
         fields = ','.join(self.columns)
         query = f'INSERT INTO {table} ({fields}) VALUES (@train_id,@route_id, @active, @timestamp, @latitude, @longitude, @speed, @direction)'
@@ -168,6 +182,3 @@ class TrainManager:
             ]
         )
         return query, job_config
-
-
-#        for record in self.records:
