@@ -15,15 +15,8 @@ def on_message(ws, message):
     # Spara
     if train_manager.add_to_df(message):
         # Spara när 1000 poster
-        if train_manager.df.shape[0] >= 1000:
+        if train_manager.df.shape[0] >= 100:
             train_manager.insert_df_into_bigquery()
-
-            # i+=1
-            # if i==2:
-#            exit()
-#            train_manager.insert_and_reset()
-#            time.sleep(5)
-
 
 
 def on_error(ws, e):
