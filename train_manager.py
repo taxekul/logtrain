@@ -79,10 +79,7 @@ class TrainManager:
 
             # Avbryt om för tidigt
             if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
-#                print('För tidigt för', train_id)
                 return False
-            # else:
-            #     print(train_id, timestamp , latest_entry + timedelta(seconds=self.interval_seconds))
 
             # Gör om till decimal i stället för minuter osv
             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
