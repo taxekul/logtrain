@@ -78,7 +78,7 @@ class TrainManager:
             timestamp=pd.Timestamp(timestamp)
 
             # Avbryt om för tidigt
-            if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0) + timedelta(seconds=self.add_interval_seconds)):
+            if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
 #                print('För tidigt för', train_id)
                 return False
             # else:
