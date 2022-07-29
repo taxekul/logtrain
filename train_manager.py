@@ -27,9 +27,10 @@ class TrainManager:
             )
         self.init_df()
 
+        # Senaste uppdateringen för respektive route
+        self.latest_update = {}
         self.add_interval_seconds = add_interval_seconds
         self.latest_insert = datetime.now()
-        self.latest_update = {}
         self.insert_interval_seconds=insert_interval_seconds
         self.insert_interval_records = insert_interval_records
 
@@ -62,7 +63,7 @@ class TrainManager:
         reading = reading.split(',')
         train_id = reading[14].split('.')[0]
 
-        # Avbryt om fel tåg eller ingen position
+        # Avbryt om fel tåg eller ingen position eller route
         if train_id not in self.train_ids:
             return False
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
@@ -77,7 +78,7 @@ class TrainManager:
             timestamp=pd.Timestamp(timestamp)
 
             # Avbryt om för tidigt
-            if timestamp < self.latest_update.get(train_id, datetime.fromtimestamp(0) + timedelta(seconds=self.add_interval_seconds)):
+            if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0) + timedelta(seconds=self.add_interval_seconds)):
 #                print('För tidigt för', train_id)
                 return False
             # else:
@@ -97,7 +98,7 @@ class TrainManager:
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
 
             self.df=self.df.append(record, ignore_index=True)
-            self.latest_update[train_id]=timestamp
+            self.latest_update[route_id] = timestamp
             # print('Tillagt')
             return True
 
