@@ -3,27 +3,18 @@ import websocket
 import time
 from train_manager import TrainManager
 
-i = 0
-ids = set()
-
-
 def on_message(ws, message):
-    
-    global i
-    global ids
-
     # Spara
     if train_manager.add_to_df(message):
-        # Spara när 1000 poster
-        if train_manager.df.shape[0] >= 100:
-            train_manager.insert_df_into_bigquery()
+        train_manager.insert_df_into_bigquery()
 
 
 def on_error(ws, e):
     print(e)
 
+
 test = on_message
-train_manager = TrainManager(5)
+train_manager = TrainManager(add_interval_seconds=5,insert_interval_seconds=60, insert_interval_records=100)
 
 ws = websocket.WebSocketApp(
     "wss://api.oxyfi.com/trainpos/listen?v=1&key=21f372da5fb1eac65250b56ef6fa60ab", on_message=test, on_error=on_error)

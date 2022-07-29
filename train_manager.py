@@ -2,23 +2,19 @@ import warnings
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
 from google.auth import compute_engine
-#from train_reading import TrainReading
-
 import pandas as pd
 import pandas_gbq
 from datetime import datetime
 from datetime import timedelta
-#from dateutil import tz
 from google.cloud import bigquery
 
 
 class TrainManager:
-    def __init__(self, interval_seconds=0) -> None:
+    def __init__(self, add_interval_seconds=0, insert_interval_seconds=60, insert_interval_records=100) -> None:
         # Läs in VT-tågnummer
         with open('train_ids.txt', 'r') as train_file:
             self.train_ids = [train_id.strip() for train_id in train_file.readlines()]
         
-        self.interval_seconds = interval_seconds
         self.columns=(
                 'train_id',
                 'route_id',
@@ -26,20 +22,24 @@ class TrainManager:
                 'timestamp',
                 'latitude',
                 'longitude',
-#                'position',
                 'speed',
                 'direction',
             )
         self.init_df()
 
+        self.add_interval_seconds = add_interval_seconds
+        self.latest_insert = datetime.now()
+        self.latest_update = {}
+        self.insert_interval_seconds=insert_interval_seconds
+        self.insert_interval_records = insert_interval_records
+
         credentials = compute_engine.Credentials()
         pandas_gbq.context.credentials = credentials
 
-        self.records = []
-
-
         # Används om direkta sql-kommandon
         self.client = None#bigquery.Client()
+        self.records = []
+
 
     def init_df(self):
         self.df = pd.DataFrame(columns=self.columns)
@@ -51,7 +51,12 @@ class TrainManager:
                                 'longitude': float,
                                 'speed': float,
                                 'direction': float})
-    
+
+
+    @property 
+    def time_to_insert(self):
+        return datetime.now() > self.latest_insert + timedelta(seconds=self.insert_interval_seconds) or self.df.shape[0]>=self.insert_interval_records
+
 
     def add_to_df(self,reading):
         reading = reading.split(',')
@@ -62,7 +67,6 @@ class TrainManager:
             return False
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
             return False
-
         else:
             train_id = reading[14].split('.')[0]
             route_id = reading[16].split('.')[0]
@@ -71,118 +75,37 @@ class TrainManager:
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
             timestamp=pd.Timestamp(timestamp)
-#            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
-#            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
 
             # Avbryt om för tidigt
-            latest_entry = self.df[self.df.train_id == train_id].timestamp.max()
-            if (not pd.isnull(latest_entry)) and (timestamp < latest_entry + timedelta(seconds=self.interval_seconds)):
+            if timestamp < self.latest_update.get(train_id, datetime.fromtimestamp(0) + timedelta(seconds=self.add_interval_seconds)):
 #                print('För tidigt för', train_id)
                 return False
             # else:
             #     print(train_id, timestamp , latest_entry + timedelta(seconds=self.interval_seconds))
 
+            # Gör om till decimal i stället för minuter osv
             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
             longitude = int(reading[5][0:3]) + float(reading[5][3:]) / 60
             position = (latitude, longitude)
 
+            # km/h i stället för knop
             speed = 0 if reading[7] == '' else float(reading[7]) * 1.852
+
             direction = 0 if reading[8] == '' else float(reading[8])
 
             record = {'train_id': train_id, 'route_id': route_id, 'active': active,
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
 
             self.df=self.df.append(record, ignore_index=True)
+            self.latest_update[train_id]=timestamp
             # print('Tillagt')
             return True
 
 
-    # Och nollställ
+    # INSERT i databasen och nollställ
     def insert_df_into_bigquery(self):
-        pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_table',project_id='spry-starlight-329007', if_exists='append')
-        self.init_df()
-        print('Tillagt och nollställt')
-
-
-    # Lägg till i records, inte i df
-#     def add(self, reading):
-#         reading = reading.split(',')
-#         train_id = reading[14].split('.')[0]
-
-#         # Avbryt om fel tåg eller ingen position
-#         if train_id not in self.train_ids:
-#             return False
-#         elif reading[3] == '' or reading[5] == '' or reading[16]=='':
-#             return False
-
-#         else:
-#             train_id = reading[14].split('.')[0]
-#             route_id = reading[16].split('.')[0]
-#             active = True if reading[2] == 'A' else False
-
-#             dt_format = '%d%m%y%H%M%S.%f'
-#             timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-# #            timestamp = timestamp.replace(tzinfo=tz.gettz('UTC'))
-# #            timestamp = timestamp.astimezone(tz.gettz('Europe/Stockholm'))
-
-#             latitude = int(reading[3][0:2]) + float(reading[3][2:]) / 60
-#             longitude = int(reading[5][0:3]) + float(reading[5][3:]) / 60
-#             position = (latitude, longitude)
-
-#             speed = 0 if reading[7] == '' else float(reading[7]) * 1.852
-#             direction = 0 if reading[8] == '' else float(reading[8])
-
-#             record = {'train_id': train_id, 'route_id': route_id, 'active': active,
-#                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
-            
-#             self.records.append(record)
-            
-#             return True
-
-
-#     # Med vanligt sql
-#     def insert_and_reset(self):
-#         # 1 generate sql
-#         for record in self.records:
-#             query, job_config = self.generate_query(record)
-#             # Make an API request.
-#             query_job = self.client.query(query, job_config=job_config)
-
-#         # 2 connect to db
-#         # 3 reset
-#         self.records = []
-
-
-#     # Vanlig sql
-#     def generate_query_TABORT(self):
-#         table = 'logtrain_data.logtrain_data_table'
-#         fields = ','.join(self.columns)
-#         values =''
-#         for record in self.records:
-#             str_record = [str(s) for s in record.values()]
-#             values += f'({",".join(str_record)})'
-
-#         query = f'INSERT INTO {table} ({fields}) VALUES (@train_id,@route_id, @active, @timestamp, @latitude, @longitude, @speed, @direction)'
-
-#         return query
-
-
-#     # Vanlig sql
-#     def generate_query(self, record):
-#         table = 'logtrain_data.logtrain_data_table'
-#         fields = ','.join(self.columns)
-#         query = f'INSERT INTO {table} ({fields}) VALUES (@train_id,@route_id, @active, @timestamp, @latitude, @longitude, @speed, @direction)'
-
-#         job_config = bigquery.QueryJobConfig(
-#             query_parameters=[
-#                 bigquery.ScalarQueryParameter("train_id", "STRING", record['train_id']),
-#                 bigquery.ScalarQueryParameter("route_id", "STRING", 0 if record['route_id']=='' else record['route_id']),
-#                 bigquery.ScalarQueryParameter("active", "BOOL", record['active']),
-#                 bigquery.ScalarQueryParameter("timestamp", "DATETIME", record['timestamp']),
-#                 bigquery.ScalarQueryParameter("latitude", "FLOAT64", record['latitude']),
-#                 bigquery.ScalarQueryParameter("longitude", "FLOAT64", record['longitude']),
-#                 bigquery.ScalarQueryParameter("speed", "FLOAT64", record['speed']),
-#                 bigquery.ScalarQueryParameter("direction", "FLOAT64", record['direction']),
-#             ]
-#         )
-#         return query, job_config
+        if self.time_to_insert:
+            pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_table',project_id='spry-starlight-329007', if_exists='append')
+            self.latest_insert=datetime.now()
+            self.init_df()
+            print('Tillagt och nollställt')
