@@ -54,6 +54,7 @@ class TrainManager:
                                 'direction': float})
 
 
+    #Lägga till i databasen nu?
     @property 
     def time_to_insert(self):
         return datetime.now() > self.latest_insert + timedelta(seconds=self.insert_interval_seconds) or self.df.shape[0]>=self.insert_interval_records
