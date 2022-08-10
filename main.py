@@ -14,7 +14,7 @@ def on_error(ws, e):
 
 
 test = on_message
-train_manager = TrainManager(add_interval_seconds=5,insert_interval_seconds=60, insert_interval_records=100)
+train_manager = TrainManager(add_interval_seconds=5,insert_interval_seconds=10, insert_interval_records=100)
 
 ws = websocket.WebSocketApp(
     "wss://api.oxyfi.com/trainpos/listen?v=1&key=21f372da5fb1eac65250b56ef6fa60ab", on_message=test, on_error=on_error)

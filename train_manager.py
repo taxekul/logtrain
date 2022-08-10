@@ -103,7 +103,7 @@ class TrainManager:
     # INSERT i databasen och nollställ
     def insert_df_into_bigquery(self):
         if self.time_to_insert:
-            pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_table',project_id='spry-starlight-329007', if_exists='append')
+            pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_current',project_id='spry-starlight-329007', if_exists='append')
             self.latest_insert=datetime.now()
             self.init_df()
             print('Tillagt och nollställt')
