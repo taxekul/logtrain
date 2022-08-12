@@ -7,6 +7,7 @@
 from datetime import datetime
 from datetime import timedelta
 import mysql.connector
+import logging
 
 # from google.cloud import bigquery
 
@@ -85,7 +86,7 @@ class TrainManager:
             record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
 
-            print(record['route_id'])
+            logging.info(f'v: {*record.values()}')
             query_insert = """INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
             val = *record.values()
             self.cursor.execute(query_insert, val)
