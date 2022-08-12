@@ -2,11 +2,17 @@
 import websocket
 import time
 from train_manager import TrainManager
+import logging
 
+i=0
 def on_message(ws, message):
     # Spara
-    if train_manager.add_to_df(message):
-        train_manager.insert_df_into_bigquery()
+    global i
+    i+=1
+    logging.info(str(i))
+    train_manager.add_to_db(message)
+    
+    #    train_manager.insert_df_into_bigquery()
 
 
 def on_error(ws, e):
@@ -24,6 +30,6 @@ except Exception as e:
     print('Exception:',e.format())
 
 print('Avslutar!' , result)
-print(train_manager.df.head())
-print(train_manager.df.info())
-print(train_manager.df.shape[0])
+# print(train_manager.df.head())
+# print(train_manager.df.info())
+# print(train_manager.df.shape[0])
