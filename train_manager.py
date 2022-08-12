@@ -88,7 +88,7 @@ class TrainManager:
             direction = 0 if reading[8] == '' else float(reading[8])
 
             record = {'train_id': train_id, 'route_id': route_id, 
-                      'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
+                      'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': int(direction)}
             #values = str(*record.values())
             logging.info(f'v: {record["train_id"]}')
             query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES({record['train_id']},{record['route_id']},
