@@ -85,11 +85,12 @@ class TrainManager:
 
             record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
-
-            logging.info(f'v: {*record.values()}')
-            query_insert = """INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-            val = *record.values()
-            self.cursor.execute(query_insert, val)
+            values = str(*record.values())
+#            logging.info(f'v: {values}')
+            query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES ({record['train_id']},{record['route_id']},
+            {record['timestamp']},{record['latitude']},{record['longitude']},{record['speed']},{record['direction']}"""
+##            val = record.values()
+            self.cursor.execute(query_insert)#, values)
             self.db.commit()
 
             return True
