@@ -51,6 +51,7 @@ class TrainManager:
 
 
     def add_to_db(self,reading):
+        
         reading = reading.split(',')
         train_id = reading[14].split('.')[0]
 
@@ -61,6 +62,7 @@ class TrainManager:
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
             return False
         else:
+            print('läsning mottagen')
             train_id = reading[14].split('.')[0]
             route_id = reading[16].split('.')[0]
             active = True if reading[2] == 'A' else False
@@ -72,6 +74,7 @@ class TrainManager:
 
             # Avbryt om för tidigt
             if timestamp_timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
+                print("avbryter",timestamp)
                 return False
 
             # Gör om till decimal i stället för minuter osv
@@ -86,14 +89,14 @@ class TrainManager:
 
             record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
-            values = str(*record.values())
+            #values = str(*record.values())
             logging.info(f'v: {record["train_id"]}')
             query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES ({record['train_id']},{record['route_id']},
             {record['timestamp']},{record['latitude']},{record['longitude']},{record['speed']},{record['direction']}"""
 ##            val = record.values()
             self.cursor.execute(query_insert)#, values)
             self.db.commit()
-
+            print('tillagt')
             return True
 
             self.df=self.df.append(record, ignore_index=True)
