@@ -67,7 +67,7 @@ class TrainManager:
 
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp_timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            timestamp = timestamp_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 #            timestamp=pd.Timestamp(timestamp)
 
             # Avbryt om för tidigt
@@ -87,7 +87,7 @@ class TrainManager:
             record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
             values = str(*record.values())
-#            logging.info(f'v: {values}')
+            logging.info(f'v: {record["train_id"]}')
             query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES ({record['train_id']},{record['route_id']},
             {record['timestamp']},{record['latitude']},{record['longitude']},{record['speed']},{record['direction']}"""
 ##            val = record.values()
@@ -99,4 +99,5 @@ class TrainManager:
             self.df=self.df.append(record, ignore_index=True)
             self.latest_update[route_id] = timestamp
             # print('Tillagt')
+
             return True
