@@ -1,12 +1,14 @@
-import warnings
-warnings.simplefilter(action="ignore", category=FutureWarning)
+# import warnings
+# warnings.simplefilter(action="ignore", category=FutureWarning)
 
-from google.auth import compute_engine
-import pandas as pd
-import pandas_gbq
+# from google.auth import compute_engine
+# import pandas as pd
+# import pandas_gbq
 from datetime import datetime
 from datetime import timedelta
-from google.cloud import bigquery
+import mysql.connector
+
+# from google.cloud import bigquery
 
 
 class TrainManager:
@@ -25,7 +27,7 @@ class TrainManager:
                 'speed',
                 'direction',
             )
-        self.init_df()
+#        self.init_df()
 
         # Senaste uppdateringen för respektive route
         self.latest_update = {}
@@ -34,33 +36,20 @@ class TrainManager:
         self.insert_interval_seconds=insert_interval_seconds
         self.insert_interval_records = insert_interval_records
 
-        credentials = compute_engine.Credentials()
-        pandas_gbq.context.credentials = credentials
 
-        # Används om direkta sql-kommandon
-        self.client = None#bigquery.Client()
-        self.records = []
-
-
-    def init_df(self):
-        self.df = pd.DataFrame(columns=self.columns)
-        self.df = self.df.astype(dtype={'train_id': 'string',
-                                'route_id': 'string',
-                                'active': bool,
-                                'timestamp': 'datetime64[ns]',
-                                'latitude': float,
-                                'longitude': float,
-                                'speed': float,
-                                'direction': float})
+        self.db = mysql.connector.connect(user='my_remote', password="my_remote",
+                             host='34.172.240.147',
+                             database='korv')
+        self.cursor = self.db.cursor()
 
 
     #Lägga till i databasen nu?
-    @property 
-    def time_to_insert(self):
-        return datetime.now() > self.latest_insert + timedelta(seconds=self.insert_interval_seconds) or self.df.shape[0]>=self.insert_interval_records
+    # @property 
+    # def time_to_insert(self):
+    #     return datetime.now() > self.latest_insert + timedelta(seconds=self.insert_interval_seconds) or self.df.shape[0]>=self.insert_interval_records
 
 
-    def add_to_df(self,reading):
+    def add_to_db(self,reading):
         reading = reading.split(',')
         train_id = reading[14].split('.')[0]
 
@@ -76,7 +65,8 @@ class TrainManager:
 
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp=pd.Timestamp(timestamp)
+            timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+#            timestamp=pd.Timestamp(timestamp)
 
             # Avbryt om för tidigt
             if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
@@ -92,19 +82,17 @@ class TrainManager:
 
             direction = 0 if reading[8] == '' else float(reading[8])
 
-            record = {'train_id': train_id, 'route_id': route_id, 'active': active,
+            record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
+
+            query_insert = """INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+            val = *record.values()
+            self.cursor.execute(query_insert, val)
+            self.db.commit()
+
+            return True
 
             self.df=self.df.append(record, ignore_index=True)
             self.latest_update[route_id] = timestamp
             # print('Tillagt')
             return True
-
-
-    # INSERT i databasen och nollställ
-    def insert_df_into_bigquery(self):
-        if self.time_to_insert:
-            pandas_gbq.to_gbq(self.df, 'logtrain_data.logtrain_data_current',project_id='spry-starlight-329007', if_exists='append')
-            self.latest_insert=datetime.now()
-            self.init_df()
-            print('Tillagt och nollställt')
