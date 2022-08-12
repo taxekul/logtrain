@@ -4,8 +4,16 @@ import time
 from train_manager import TrainManager
 import logging
 
+import google.cloud.logging
+client = google.cloud.logging.Client()
+client.setup_logging()
+
+
+import logging
+
+
 i=0
-pri nt('RUNING',flush=True)
+print('RUNING',flush=True)
 
 def on_message(ws, message):
     # Spara
