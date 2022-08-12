@@ -55,7 +55,8 @@ class TrainManager:
         train_id = reading[14].split('.')[0]
 
         # Avbryt om fel tåg eller ingen position eller route
-        if train_id not in self.train_ids:
+        if False:#train_id not in self.train_ids:
+            
             return False
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
             return False
