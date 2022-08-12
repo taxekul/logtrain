@@ -5,6 +5,8 @@ from train_manager import TrainManager
 import logging
 
 i=0
+print('RUNING',flush=True)
+
 def on_message(ws, message):
     # Spara
     global i
