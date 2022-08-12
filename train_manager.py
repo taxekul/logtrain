@@ -66,12 +66,12 @@ class TrainManager:
             active = True if reading[2] == 'A' else False
 
             dt_format = '%d%m%y%H%M%S.%f'
-            timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            timestamp_timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
+            timestamp = timestamp_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 #            timestamp=pd.Timestamp(timestamp)
 
             # Avbryt om för tidigt
-            if timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
+            if timestamp_timestamp = datetime.strptime(reading[9] + reading[1], dt_format) < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
                 return False
 
             # Gör om till decimal i stället för minuter osv
@@ -87,7 +87,7 @@ class TrainManager:
             record = {'train_id': train_id, 'route_id': route_id, 
                       'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': direction}
             values = str(*record.values())
-#            logging.info(f'v: {values}')
+            logging.info(f'v: {record["train_id"]}')
             query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES ({record['train_id']},{record['route_id']},
             {record['timestamp']},{record['latitude']},{record['longitude']},{record['speed']},{record['direction']}"""
 ##            val = record.values()

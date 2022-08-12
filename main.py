@@ -12,14 +12,10 @@ client.setup_logging()
 import logging
 
 
-i=0
 print('RUNING',flush=True)
 
 def on_message(ws, message):
     # Spara
-    global i
-    i+=1
-    logging.info(str(i))
     train_manager.add_to_db(message)
     
     #    train_manager.insert_df_into_bigquery()
