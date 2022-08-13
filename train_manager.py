@@ -51,7 +51,7 @@ class TrainManager:
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
             return False
         else:
-            print('läsning mottagen')
+#            print('läsning mottagen')
             train_id = reading[14].split('.')[0]
             route_id = reading[16].split('.')[0]
             active = True if reading[2] == 'A' else False
@@ -62,7 +62,7 @@ class TrainManager:
 
             # Avbryt om för tidigt
             if timestamp_timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
-                print("avbryter",timestamp_str)
+#                print("avbryter",timestamp_str)
                 return False
 
             # Gör om till decimal i stället för minuter osv
@@ -83,7 +83,7 @@ class TrainManager:
 ##            val = record.values()
             self.cursor.execute(query_insert)#, values)
             self.db.commit()
-            print('tillagt')
+#            print('tillagt')
             self.latest_update[route_id] = timestamp_timestamp
             return True
 
