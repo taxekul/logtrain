@@ -1,15 +1,6 @@
-# import warnings
-# warnings.simplefilter(action="ignore", category=FutureWarning)
-
-# from google.auth import compute_engine
-# import pandas as pd
-# import pandas_gbq
 from datetime import datetime
 from datetime import timedelta
 import mysql.connector
-import logging
-
-# from google.cloud import bigquery
 
 
 class TrainManager:
@@ -39,8 +30,7 @@ class TrainManager:
 
 
         self.db = mysql.connector.connect(user='my_remote', password="my_remote",
-                             host='34.172.240.147',
-                             database='korv')
+                                          host='35.193.183.207', database='korv')
         self.cursor = self.db.cursor()
 
 
@@ -56,8 +46,7 @@ class TrainManager:
         train_id = reading[14].split('.')[0]
 
         # Avbryt om fel tåg eller ingen position eller route
-        if False:#train_id not in self.train_ids:
-            
+        if train_id not in self.train_ids:
             return False
         elif reading[3] == '' or reading[5] == '' or reading[16] == '':
             return False
@@ -69,12 +58,11 @@ class TrainManager:
 
             dt_format = '%d%m%y%H%M%S.%f'
             timestamp_timestamp = datetime.strptime(reading[9] + reading[1], dt_format)
-            timestamp = timestamp_timestamp.strftime('%Y-%m-%d %H:%M:%S')
-#            timestamp=pd.Timestamp(timestamp)
+            timestamp_str = timestamp_timestamp.strftime('%Y-%m-%d %H:%M:%S')
 
             # Avbryt om för tidigt
             if timestamp_timestamp < self.latest_update.get(route_id, datetime.fromtimestamp(0)) + timedelta(seconds=self.add_interval_seconds):
-                print("avbryter",timestamp)
+                print("avbryter",timestamp_str)
                 return False
 
             # Gör om till decimal i stället för minuter osv
@@ -88,19 +76,18 @@ class TrainManager:
             direction = 0 if reading[8] == '' else float(reading[8])
 
             record = {'train_id': train_id, 'route_id': route_id, 
-                      'timestamp': timestamp, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': int(direction)}
-            #values = str(*record.values())
-            logging.info(f'v: {record["train_id"]}')
+                      'timestamp': timestamp_str, 'latitude': latitude, 'longitude': longitude, 'speed': speed, 'direction': int(direction)}
+
             query_insert = f"""INSERT INTO readings (train_id,route_id,timestamp,latitude,longitude,speed,direction) VALUES({record['train_id']},{record['route_id']},
             CURRENT_TIMESTAMP(),{record['latitude']},{record['longitude']},{record['speed']},{record['direction']});"""
 ##            val = record.values()
             self.cursor.execute(query_insert)#, values)
             self.db.commit()
             print('tillagt')
+            self.latest_update[route_id] = timestamp_timestamp
             return True
 
             self.df=self.df.append(record, ignore_index=True)
-            self.latest_update[route_id] = timestamp
             # print('Tillagt')
 
             return True
