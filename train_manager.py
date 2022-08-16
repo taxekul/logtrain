@@ -29,7 +29,7 @@ class TrainManager:
         self.insert_interval_records = insert_interval_records
 
         self.db = mysql.connector.connect(user='insertdata', password="insertdata",
-                                          host='35.193.183.207', database='korv')
+                                          host='logtrain-db.co6nsefsfn8u.eu-north-1.rds.amazonaws.com', database='korv')
         self.cursor = self.db.cursor()
 
 
