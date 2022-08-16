@@ -5,3 +5,4 @@ pandas_gbq
 google-cloud-bigquery
 mysql-connector-python
 google-cloud-logging
+silly

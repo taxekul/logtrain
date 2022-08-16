@@ -85,8 +85,5 @@ class TrainManager:
 #            print('tillagt')
             self.latest_update[route_id] = timestamp_timestamp
             return True
-
             self.df=self.df.append(record, ignore_index=True)
-            # print('Tillagt')
-
             return True
